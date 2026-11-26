@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# AgentGuard local database
+data/*.db
+data/*.db-*
+data/*.sqlite3
+data/*.sqlite3-*
+
+# Local environment files
+.env.*
+!.env.example
