@@ -59,3 +59,10 @@ pytest -q
 **This is a local teaching/demo environment, NOT production-ready.** Actor selection in the dashboard is not authentication; a production version needs authenticated identities, durable and tamper-resistant audit storage, rate limits, and stricter deployment isolation. The initial attack tests verify policy enforcement; they do not yet prove that real-model prompt injections are always detected.
 
 For full design decisions and the four-week roadmap, see [docs/architecture.md](docs/architecture.md) and [docs/project-proposal.md](docs/project-proposal.md).
+
+## Contributing
+- Create one branch per Jira ticket.
+- Include the Jira issue key in branch names, commits, and PR titles.
+- Submit changes through Pull Requests.
+- Require another team member to review before merging.
+- Run automated tests before merging.
