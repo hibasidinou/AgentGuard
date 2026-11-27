@@ -1,6 +1,7 @@
 """Sample documents; all tool execution flows through authorization."""
 from backend.monitoring.audit import record
-from backend.security.policy import ACTORS, DOCUMENT_CLASSIFICATION, authorize
+from backend.security.auth.context import SecurityContext
+from backend.security.policy import DOCUMENT_CLASSIFICATION, authorize
 
 DOCUMENTS = {
     "public-roadmap": {
@@ -22,15 +23,21 @@ DOCUMENTS = {
 }
 
 
-def execute_tool(actor_id: str, tool: str, arguments: object) -> dict:
-    decision = authorize(actor_id, tool, arguments)
-    target = str(arguments.get("document_id", "-")) if isinstance(arguments, dict) else "-"
-    record(actor_id, tool, target, decision.allowed, decision.reason)
+def execute_tool(context: SecurityContext, tool: str, arguments: object) -> dict:
+    decision = authorize(context, tool, arguments)
+    if not isinstance(context, SecurityContext) or context.role not in ("intern", "manager"):
+        return {"ok": False, "error": decision.reason}
+    # Audit only recognized resource/tool identifiers; do not echo arbitrary
+    # client/model text (which could contain credentials) into the event stream.
+    candidate = arguments.get("document_id") if isinstance(arguments, dict) else None
+    target = candidate if isinstance(candidate, str) and candidate in DOCUMENT_CLASSIFICATION else "-"
+    audit_tool = tool if tool in ("list_documents", "read_document", "request_update") else "unknown"
+    record(context.actor_id, audit_tool, target, decision.allowed, decision.reason)
     if not decision.allowed:
         return {"ok": False, "error": decision.reason}
 
     if tool == "list_documents":
-        role = ACTORS[actor_id]
+        role = context.role
         items = [
             {"id": key, "title": value["title"], "classification": DOCUMENT_CLASSIFICATION[key]}
             for key, value in DOCUMENTS.items()

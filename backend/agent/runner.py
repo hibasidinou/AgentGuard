@@ -2,10 +2,14 @@
 import json
 
 from backend.agent.ollama import next_message
+from backend.security.auth.context import SecurityContext
 from backend.tools.documents import execute_tool
 
 
-def run_agent(actor_id: str, prompt: str) -> dict:
+def run_agent(context: SecurityContext, prompt: str) -> dict:
+    # Only the trusted backend supplies this request-scoped identity.
+    if not isinstance(context, SecurityContext) or context.role not in ("intern", "manager"):
+        raise ValueError("Invalid security context")
     messages = [
         {
             "role": "system",
@@ -36,7 +40,7 @@ def run_agent(actor_id: str, prompt: str) -> dict:
                     arguments = json.loads(arguments)
                 except json.JSONDecodeError:
                     arguments = None
-            result = execute_tool(actor_id, name, arguments)
+            result = execute_tool(context, name, arguments)
             actions.append({"tool": name, "result": result})
             messages.append(
                 {

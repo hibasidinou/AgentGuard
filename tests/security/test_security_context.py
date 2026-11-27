@@ -198,7 +198,7 @@ def test_storage_failure_propagates(store):
 
 
 @pytest.mark.parametrize("username,allowed", [("alice", False), ("bob", True)])
-def test_legacy_policy_compatibility(store, username, allowed):
+def test_authenticated_policy_compatibility(store, username, allowed):
     context = context_for(store, login(store, username))
-    decision = authorize(context.actor_id, "read_document", {"document_id": "private-budget"})
+    decision = authorize(context, "read_document", {"document_id": "private-budget"})
     assert decision.allowed is allowed
